@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Odaktaki uygulamanin rengine gore degisen arka plan -->
+    <View
+        android:id="@+id/heroBg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Sagdaki buyuk harf -->
+    <TextView
+        android:id="@+id/heroLetter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|top"
+        android:layout_marginTop="40dp"
+        android:layout_marginEnd="70dp"
+        android:alpha="0.55"
+        android:fontFamily="sans-serif-black"
+        android:includeFontPadding="false"
+        android:textColor="#FFFF4F8B"
+        android:textSize="190sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingStart="28dp"
+        android:paddingTop="18dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="12dp">
+
+        <!-- Ust cubuk -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="34dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/clockChip"
+                style="@style/Chip"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp">
+
+                <TextClock
+                    android:id="@+id/clock"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:format12Hour="HH:mm"
+                    android:format24Hour="HH:mm"
+                    android:textColor="@color/text"
+                    android:textSize="17sp" />
+
+                <TextClock
+                    android:id="@+id/date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:format12Hour="EEE d MMM"
+                    android:format24Hour="EEE d MMM"
+                    android:textColor="@color/text_dim"
+                    android:textSize="11sp" />
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="14dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@color/chip_stroke" />
+
+                <TextView
+                    android:id="@+id/weather"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="… · İstanbul"
+                    android:textColor="@color/text_dim"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <LinearLayout
+                android:id="@+id/airplayChip"
+                style="@style/Chip.Focusable">
+
+                <TextView style="@style/ChipText" android:text="AirPlay" />
+
+                <View android:id="@+id/airplayDot" style="@style/Dot" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/adChip"
+                style="@style/Chip.Focusable">
+
+                <TextView style="@style/ChipText" android:text="Reklam engeli" />
+
+                <View android:id="@+id/adDot" style="@style/Dot" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/speedChip"
+                style="@style/Chip.Focusable">
+
+                <TextView
+                    android:id="@+id/speedText"
+                    style="@style/ChipText"
+                    android:text="Hız testi" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/ramChip"
+                style="@style/Chip.Focusable">
+
+                <TextView
+                    android:id="@+id/ramText"
+                    style="@style/ChipText"
+                    android:text="RAM %—" />
+
+                <View android:id="@+id/ramDot" style="@style/Dot" />
+
+                <TextView
+                    android:id="@+id/cleanText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="22dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/pill_accent"
+                    android:gravity="center"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:text="Boşalt"
+                    android:textColor="@color/text"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <FrameLayout
+                android:id="@+id/settingsChip"
+                style="@style/Chip.Focusable"
+                android:layout_width="34dp"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text="⚙"
+                    android:textColor="@color/text"
+                    android:textSize="16sp" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <!-- Hero alani -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="bottom"
+            android:orientation="vertical"
+            android:paddingBottom="10dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <View
+                    android:id="@+id/greetLine"
+                    android:layout_width="14dp"
+                    android:layout_height="2dp"
+                    android:background="@color/accent" />
+
+                <TextView
+                    android:id="@+id/greeting"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:textColor="@color/text_dim"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/heroTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-black"
+                android:maxLines="1"
+                android:textColor="#FF6FA8FF"
+                android:textSize="44sp" />
+
+            <TextView
+                android:id="@+id/heroSub"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:textColor="@color/text"
+                android:textSize="14sp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/heroAction"
+                    style="@style/HeroPill"
+                    android:background="@drawable/pill_soft"
+                    android:text="OK  ile aç" />
+
+                <TextView
+                    style="@style/HeroPill"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/pill_outline"
+                    android:text="Basılı tut  ·  seçenekler" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Uygulamalar -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView style="@style/RowTitle" android:text="Uygulamalar" />
+
+            <TextView
+                android:id="@+id/appsCount"
+                style="@style/RowTitle"
+                android:layout_marginStart="6dp"
+                android:textColor="@color/text_faint"
+                android:textStyle="normal" />
+        </LinearLayout>
+
+        <HorizontalScrollView
+            android:id="@+id/appsScroll"
+            android:layout_width="match_parent"
+            android:layout_height="112dp"
+            android:layout_marginStart="-28dp"
+            android:layout_marginEnd="-24dp"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:paddingStart="40dp"
+            android:paddingEnd="40dp"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/appsRow"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:clipChildren="false"
+                android:gravity="center_vertical"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
+
+        <!-- Girisler -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:layout_marginTop="2dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/RowTitle"
+                android:layout_marginEnd="12dp"
+                android:text="Girişler" />
+
+            <HorizontalScrollView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/inputsRow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="4dp"
+                    android:paddingEnd="4dp" />
+            </HorizontalScrollView>
+        </LinearLayout>
+
+        <!-- Ipucu cubugu -->
+        <TextView
+            android:id="@+id/hint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="end"
+            android:text="@string/hint"
+            android:textColor="@color/text_faint"
+            android:textSize="11sp" />
+    </LinearLayout>
+</FrameLayout>
