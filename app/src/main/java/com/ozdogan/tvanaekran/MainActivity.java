@@ -23,6 +23,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.TypedValue;
@@ -62,7 +63,12 @@ public class MainActivity extends Activity {
     private static final Set<String> KEEP_ALIVE = new HashSet<>(java.util.Arrays.asList(
             AppRepository.AIRSCREEN, AppRepository.LOCALSEND, "com.android.systemui", "android"));
     /** Arka plan uygulamasi acildiktan sonra ana ekrana donmeden once beklenen sure. */
-    private static final long SERVICE_WARMUP = 3_000;
+    private static final long SERVICE_WARMUP = 1_000;
+    /**
+     * LocalSend kendini koruyan bir servis calistirmiyor; bellek sikisinca Android onu kapatiyor.
+     * Ana ekran acikken kapanmissa yeniden baslatilir, ama ekrani rahatsiz etmemek icin en fazla bu siklikla.
+     */
+    private static final long LOCALSEND_RESTART_GAP = 5 * 60_000;
 
     private final Handler ui = new Handler(Looper.getMainLooper());
     private final ExecutorService bg = Executors.newSingleThreadExecutor();
@@ -81,6 +87,9 @@ public class MainActivity extends Activity {
     private View airplayDot, localsendDot, adDot, ramDot;
     private boolean speedRunning;
     private TextView hint;
+    private boolean resumed;
+    /** -LOCALSEND_RESTART_GAP: ilk kontrolde hemen baslatilabilsin. */
+    private long lastLocalSendStart = -LOCALSEND_RESTART_GAP;
     /** Tasima modundaki uygulama; null ise normal gezinme. */
     private AppEntry moving;
 
@@ -164,18 +173,13 @@ public class MainActivity extends Activity {
         registerReceiver(packageReceiver, f);
 
         reloadApps(repo.lastOpened());
-
-        // TV acildiginda LocalSend'i arka planda baslat ki dosya alabilsin
-        ui.postDelayed(() -> bg.execute(() -> {
-            if (repo.isInstalled(AppRepository.LOCALSEND) && !Status.listening(Status.LOCALSEND_PORT)) {
-                ui.post(() -> startInBackground(AppRepository.LOCALSEND));
-            }
-        }), 4_000);
+        // LocalSend'i baslatma isini refreshNetworkStatus'taki bekci yapar (TV acilisi dahil)
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        resumed = true;
         greeting.setText(greetingText());
         // HDMI'ye cihaz takilip cikarilmis olabilir; odak girislerdeyse dokunma
         View f = getCurrentFocus();
@@ -189,6 +193,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
+        resumed = false;
         ui.removeCallbacks(ramTick);
         ui.removeCallbacks(netTick);
         ui.removeCallbacks(weatherTick);
@@ -654,10 +659,13 @@ public class MainActivity extends Activity {
             boolean air = Status.listening(Status.AIRSCREEN_PORT);
             boolean send = Status.listening(Status.LOCALSEND_PORT);
             boolean ad = Status.adBlockActive();
+            boolean restart = !send && repo.isInstalled(AppRepository.LOCALSEND)
+                    && SystemClock.elapsedRealtime() - lastLocalSendStart > LOCALSEND_RESTART_GAP;
             ui.post(() -> {
                 setDot(airplayDot, air);
                 setDot(localsendDot, send);
                 setDot(adDot, ad);
+                if (restart && resumed && moving == null) startInBackground(AppRepository.LOCALSEND);
             });
         });
     }
@@ -679,12 +687,13 @@ public class MainActivity extends Activity {
             toast("Uygulama yüklü değil");
             return;
         }
+        if (AppRepository.LOCALSEND.equals(pkg)) lastLocalSendStart = SystemClock.elapsedRealtime();
         startActivity(it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
         ui.postDelayed(() -> startActivity(new Intent(Intent.ACTION_MAIN)
                 .addCategory(Intent.CATEGORY_HOME)
                 .setPackage(getPackageName())
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)), SERVICE_WARMUP);
-        ui.postDelayed(this::refreshNetworkStatus, SERVICE_WARMUP + 1_500);
+        ui.postDelayed(this::refreshNetworkStatus, SERVICE_WARMUP + 4_000);
     }
 
     private void onLocalSendClick() {

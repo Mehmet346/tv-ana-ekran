@@ -29,7 +29,9 @@ Bu ana ekran hiçbir kütüphane kullanmadan, sadece Android'in kendi bileşenle
   - Saat, tarih ve hava durumu ([Open-Meteo](https://open-meteo.com), anahtar gerekmez)
   - **AirPlay** durumu: [AirScreen](https://www.airscreen.app) yansıtmaya hazırsa yeşil
   - **LocalSend** durumu: [LocalSend](https://localsend.org) dosya almaya hazırsa yeşil. Telefondan TV'ye
-    APK, fotoğraf ve video gönderilebilir; TV açılınca arka planda kendiliğinden başlar
+    APK, fotoğraf ve video gönderilebilir. LocalSend kendini koruyan bir servis çalıştırmadığı için Android
+    bellek sıkışınca onu kapatabiliyor; ana ekran bunu fark edip yeniden başlatır (en fazla 5 dakikada bir,
+    ekranda ~1 saniye LocalSend görünür)
   - **AdGuard** durumu: ağda [AdGuard DNS](https://adguard-dns.io) çalışıyorsa yeşil
   - **Hız testi** (Cloudflare üzerinden 8 saniyelik indirme)
   - **RAM** göstergesi ve tek tuşla **Boşalt**
