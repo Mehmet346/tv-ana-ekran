@@ -19,7 +19,8 @@ final class Status {
             "https://api.open-meteo.com/v1/forecast?latitude=41.01&longitude=28.98"
                     + "&current=temperature_2m,weather_code&timezone=auto";
     private static final String SPEED_URL = "https://speed.cloudflare.com/__down?bytes=25000000";
-    private static final int AIRSCREEN_PORT = 7000;
+    static final int AIRSCREEN_PORT = 7000;
+    static final int LOCALSEND_PORT = 53317;
 
     private Status() {}
 
@@ -32,9 +33,9 @@ final class Status {
         return new long[]{pct, mi.availMem / (1024 * 1024)};
     }
 
-    /** AirScreen AirPlay portunu dinliyor mu (/proc/net uzerinden, ag trafigi olmadan). */
-    static boolean airplayListening() {
-        String hexPort = String.format(Locale.US, ":%04X", AIRSCREEN_PORT);
+    /** Cihazda bu TCP portunu dinleyen biri var mi (/proc/net uzerinden, ag trafigi olmadan). */
+    static boolean listening(int port) {
+        String hexPort = String.format(Locale.US, ":%04X", port);
         for (String f : new String[]{"/proc/net/tcp6", "/proc/net/tcp"}) {
             try (BufferedReader r = new BufferedReader(new FileReader(f))) {
                 String line;

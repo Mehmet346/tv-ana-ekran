@@ -77,7 +77,7 @@
                     android:id="@+id/weather"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="… · İstanbul"
+                    android:text="…"
                     android:textColor="@color/text_dim"
                     android:textSize="12sp" />
             </LinearLayout>
@@ -97,10 +97,19 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/localsendChip"
+                style="@style/Chip.Focusable">
+
+                <TextView style="@style/ChipText" android:text="LocalSend" />
+
+                <View android:id="@+id/localsendDot" style="@style/Dot" />
+            </LinearLayout>
+
+            <LinearLayout
                 android:id="@+id/adChip"
                 style="@style/Chip.Focusable">
 
-                <TextView style="@style/ChipText" android:text="Reklam engeli" />
+                <TextView style="@style/ChipText" android:text="AdGuard" />
 
                 <View android:id="@+id/adDot" style="@style/Dot" />
             </LinearLayout>

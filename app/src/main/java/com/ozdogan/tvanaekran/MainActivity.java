@@ -55,11 +55,14 @@ public class MainActivity extends Activity {
     /** Ana ekrana donulunce, acilan uygulamanin kapanmasina zaman taniyip sonra temizle. */
     private static final long AUTO_CLEAN_DELAY = 2_500;
     private static final long AUTO_CLEAN_INTERVAL = 60_000;
-    private static final long NET_INTERVAL = 10 * 60_000;
+    /** Durum noktalari: /proc okuma ve tek DNS sorgusu, 30 sn'de bir yeterince ucuz. */
+    private static final long NET_INTERVAL = 30_000;
     private static final long WEATHER_INTERVAL = 30 * 60_000;
     /** "Bosalt" bunlara dokunmaz: AirPlay acik kalsin, sistem arayuzu bozulmasin. */
     private static final Set<String> KEEP_ALIVE = new HashSet<>(java.util.Arrays.asList(
-            "com.ionitech.airscreen", "com.android.systemui", "android"));
+            AppRepository.AIRSCREEN, AppRepository.LOCALSEND, "com.android.systemui", "android"));
+    /** Arka plan uygulamasi acildiktan sonra ana ekrana donmeden once beklenen sure. */
+    private static final long SERVICE_WARMUP = 3_000;
 
     private final Handler ui = new Handler(Looper.getMainLooper());
     private final ExecutorService bg = Executors.newSingleThreadExecutor();
@@ -75,7 +78,7 @@ public class MainActivity extends Activity {
     private LinearLayout appsRow, inputsRow;
     private HorizontalScrollView appsScroll;
     private TextView appsCount, weather, speedText, ramText;
-    private View airplayDot, adDot, ramDot;
+    private View airplayDot, localsendDot, adDot, ramDot;
     private boolean speedRunning;
     private TextView hint;
     /** Tasima modundaki uygulama; null ise normal gezinme. */
@@ -136,16 +139,18 @@ public class MainActivity extends Activity {
         speedText = findViewById(R.id.speedText);
         ramText = findViewById(R.id.ramText);
         airplayDot = findViewById(R.id.airplayDot);
+        localsendDot = findViewById(R.id.localsendDot);
         adDot = findViewById(R.id.adDot);
         ramDot = findViewById(R.id.ramDot);
         hint = findViewById(R.id.hint);
 
         findViewById(R.id.airplayChip).setOnClickListener(v -> onAirplayClick());
+        findViewById(R.id.localsendChip).setOnClickListener(v -> onLocalSendClick());
         findViewById(R.id.adChip).setOnClickListener(v -> onAdChipClick());
         findViewById(R.id.speedChip).setOnClickListener(v -> runSpeedTest());
         findViewById(R.id.ramChip).setOnClickListener(v -> freeMemory());
         findViewById(R.id.settingsChip).setOnClickListener(v -> showSettings());
-        for (int id : new int[]{R.id.airplayChip, R.id.adChip, R.id.speedChip, R.id.ramChip, R.id.settingsChip}) {
+        for (int id : new int[]{R.id.airplayChip, R.id.localsendChip, R.id.adChip, R.id.speedChip, R.id.ramChip, R.id.settingsChip}) {
             findViewById(id).setOnFocusChangeListener((v, has) -> {
                 if (has) showChipHero((View) v);
             });
@@ -159,6 +164,13 @@ public class MainActivity extends Activity {
         registerReceiver(packageReceiver, f);
 
         reloadApps(repo.lastOpened());
+
+        // TV acildiginda LocalSend'i arka planda baslat ki dosya alabilsin
+        ui.postDelayed(() -> bg.execute(() -> {
+            if (repo.isInstalled(AppRepository.LOCALSEND) && !Status.listening(Status.LOCALSEND_PORT)) {
+                ui.post(() -> startInBackground(AppRepository.LOCALSEND));
+            }
+        }), 4_000);
     }
 
     @Override
@@ -546,12 +558,14 @@ public class MainActivity extends Activity {
         int id = chip.getId();
         if (id == R.id.airplayChip) {
             showHero("AirPlay", "Ekran yansıtma", "iPhone / Mac: Denetim Merkezi > Ekran Yansıtma", 0xFF2AA198, "OK  AirScreen'i aç");
+        } else if (id == R.id.localsendChip) {
+            showHero("LocalSend", "Dosya al", "Telefondan LocalSend > Gönder ile APK, foto, video at", 0xFF1E8C7A, "OK  durumu / başlat");
         } else if (id == R.id.adChip) {
             showHero("AdGuard DNS", "Reklam engeli", "Modem DNS'i: 94.140.14.14", 0xFF2E9E5B, "OK  durumu yenile");
         } else if (id == R.id.speedChip) {
             showHero("İnternet", "Hız testi", "Cloudflare üzerinden 8 saniyelik indirme", 0xFFE08A1E, "OK  testi başlat");
         } else if (id == R.id.ramChip) {
-            showHero("Bellek", "RAM'i boşalt", "Arka plandaki uygulamaları kapatır, AirPlay açık kalır", 0xFFD6336C, "OK  boşalt");
+            showHero("Bellek", "RAM'i boşalt", "Arka plandakileri kapatır; AirPlay ve LocalSend açık kalır", 0xFFD6336C, "OK  boşalt");
         } else if (id == R.id.settingsChip) {
             showHero("Ana ekran", "Ayarlar", "Gizli uygulamalar, sıralama, TV ayarları", 0xFF6C5CE7, "OK  aç");
         }
@@ -637,10 +651,12 @@ public class MainActivity extends Activity {
 
     private void refreshNetworkStatus() {
         bg.execute(() -> {
-            boolean air = Status.airplayListening();
+            boolean air = Status.listening(Status.AIRSCREEN_PORT);
+            boolean send = Status.listening(Status.LOCALSEND_PORT);
             boolean ad = Status.adBlockActive();
             ui.post(() -> {
                 setDot(airplayDot, air);
+                setDot(localsendDot, send);
                 setDot(adDot, ad);
             });
         });
@@ -649,7 +665,37 @@ public class MainActivity extends Activity {
     private void refreshWeather() {
         bg.execute(() -> {
             String w = Status.weather();
-            if (w != null) ui.post(() -> weather.setText(w + " · İstanbul"));
+            if (w != null) ui.post(() -> weather.setText(w));
+        });
+    }
+
+    /**
+     * Arka plan uygulamasini (or. LocalSend) baslatir ve kisa sure sonra ana ekrana geri doner.
+     * Uygulama sureci acik kalir; KEEP_ALIVE sayesinde RAM temizligi ona dokunmaz.
+     */
+    private void startInBackground(String pkg) {
+        Intent it = repo.launchIntent(pkg);
+        if (it == null) {
+            toast("Uygulama yüklü değil");
+            return;
+        }
+        startActivity(it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        ui.postDelayed(() -> startActivity(new Intent(Intent.ACTION_MAIN)
+                .addCategory(Intent.CATEGORY_HOME)
+                .setPackage(getPackageName())
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)), SERVICE_WARMUP);
+        ui.postDelayed(this::refreshNetworkStatus, SERVICE_WARMUP + 1_500);
+    }
+
+    private void onLocalSendClick() {
+        bg.execute(() -> {
+            boolean on = Status.listening(Status.LOCALSEND_PORT);
+            ui.post(() -> {
+                setDot(localsendDot, on);
+                if (on) toast("LocalSend hazır · telefonda LocalSend > Gönder > bu TV");
+                else if (!repo.isInstalled(AppRepository.LOCALSEND)) toast("LocalSend yüklü değil");
+                else startInBackground(AppRepository.LOCALSEND);
+            });
         });
     }
 
@@ -659,14 +705,13 @@ public class MainActivity extends Activity {
 
     private void onAirplayClick() {
         bg.execute(() -> {
-            boolean on = Status.airplayListening();
+            boolean on = Status.listening(Status.AIRSCREEN_PORT);
             ui.post(() -> {
                 setDot(airplayDot, on);
                 if (on) {
                     toast("AirPlay hazır · iPhone'da Ekran Yansıtma'yı aç");
                 } else {
-                    Intent it = getPackageManager().getLeanbackLaunchIntentForPackage("com.ionitech.airscreen");
-                    if (it == null) it = getPackageManager().getLaunchIntentForPackage("com.ionitech.airscreen");
+                    Intent it = repo.launchIntent(AppRepository.AIRSCREEN);
                     if (it != null) startActivity(it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
                     else toast("AirScreen yüklü değil");
                 }

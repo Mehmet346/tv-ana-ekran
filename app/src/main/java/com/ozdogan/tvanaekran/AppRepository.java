@@ -28,9 +28,14 @@ final class AppRepository {
             "com.rtk.android.miracast",
             "com.realtek.tv.settings");
 
+    /** Ust cubukta kendi dugmesi olan arka plan servisleri; satirda hic gosterilmez. */
+    static final String AIRSCREEN = "com.ionitech.airscreen";
+    static final String LOCALSEND = "org.localsend.localsend_app";
+    private static final Set<String> SERVICE_APPS = new HashSet<>(Arrays.asList(AIRSCREEN, LOCALSEND));
+
     /** Ilk acilista gizlenenler; ayarlardan geri acilabilir. */
     private static final Set<String> DEFAULT_HIDDEN = new HashSet<>(Arrays.asList(
-            "com.ionitech.airscreen", // ustteki AirPlay dugmesi aciyor            "com.android.vending",
+            "com.android.vending",
             "com.atmaca.otaupdater",
             "com.realtek.media.player",
             "com.realtek.tv.actionmenu",
@@ -57,6 +62,7 @@ final class AppRepository {
         addFrom(Intent.CATEGORY_LEANBACK_LAUNCHER, map);
         addFrom(Intent.CATEGORY_LAUNCHER, map);
         map.remove(ctx.getPackageName());
+        map.keySet().removeAll(SERVICE_APPS);
 
         Set<String> hidden = hiddenSet();
         List<String> order = order();
@@ -120,6 +126,19 @@ final class AppRepository {
 
     void setUserName(String name) {
         prefs.edit().putString(KEY_NAME, name.trim()).apply();
+    }
+
+    boolean isInstalled(String pkg) {
+        try {
+            return pm.getApplicationInfo(pkg, 0).enabled;
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
+    }
+
+    Intent launchIntent(String pkg) {
+        Intent it = pm.getLeanbackLaunchIntentForPackage(pkg);
+        return it != null ? it : pm.getLaunchIntentForPackage(pkg);
     }
 
     String lastOpened() {

@@ -28,10 +28,14 @@ Bu ana ekran hiçbir kütüphane kullanmadan, sadece Android'in kendi bileşenle
 - **Üst çubuk**
   - Saat, tarih ve hava durumu ([Open-Meteo](https://open-meteo.com), anahtar gerekmez)
   - **AirPlay** durumu: [AirScreen](https://www.airscreen.app) yansıtmaya hazırsa yeşil
-  - **Reklam engeli** durumu: ağda [AdGuard DNS](https://adguard-dns.io) çalışıyorsa yeşil
+  - **LocalSend** durumu: [LocalSend](https://localsend.org) dosya almaya hazırsa yeşil. Telefondan TV'ye
+    APK, fotoğraf ve video gönderilebilir; TV açılınca arka planda kendiliğinden başlar
+  - **AdGuard** durumu: ağda [AdGuard DNS](https://adguard-dns.io) çalışıyorsa yeşil
   - **Hız testi** (Cloudflare üzerinden 8 saniyelik indirme)
   - **RAM** göstergesi ve tek tuşla **Boşalt**
 - **RAM'i temiz tutar**: ana ekrana dönüldüğünde ve ana ekran açık kaldıkça dakikada bir arka plandaki uygulamaları kapatır
+  (AirScreen ve LocalSend hariç)
+- **Arka plan servisleri**: AirScreen ve LocalSend uygulamalar satırında görünmez, üst çubuktaki düğmelerinden yönetilir
 - **Kumandayla düzenleme**: OK'a basılı tut → *Taşı* (◀ ▶ ile kaydır, OK ile bırak), *En başa taşı*, *Gizle*, *Uygulama bilgisi*
 - **Geri tuşu** ana ekrandan Canlı TV'ye geçer
 - Sonradan yüklenen (USB, ADB vb.) uygulamalar kendiliğinden satırın sonuna eklenir
@@ -88,7 +92,7 @@ Hepsi `-Tv <IP>:5555` parametresi alır.
 | `tv-sadelestir-2.ps1` | Zeasn ana ekranı, mağazası, servisleri ve reklam sağlayıcısı (yeni ana ekran kurulduktan **sonra**) |
 | `tv-sadelestir-3.ps1` | Kullanılmayan analog/AV/VGA/komponent giriş servisleri ve yazılım güncelleyici |
 | `tv-hiz.ps1` | Animasyonları yarıya indirir, Chrome'u kapatır |
-| `tv-dns.ps1` | Kablolu bağlantıda IPv6'yı kapatır; modem IPv6 DNS'i AdGuard'ı atlıyorsa reklam engelini zorlar (root ADB gerekir, yeniden başlatınca sıfırlanır) |
+| `tv-dns.ps1` | Kablolu bağlantıda IPv6'yı kapatır; modem IPv6 DNS'i AdGuard'ı atlıyorsa reklam engelini zorlar (root ADB gerekir; TV yeniden başlayınca ya da ağ bağlantısı tazelenince sıfırlanabilir, AdGuard noktası gri olursa tekrar çalıştır) |
 | `tv-geri-al.ps1` | Devre dışı bırakılan her şeyi açar, eski ana ekranı varsayılan yapar |
 
 > Bu TV'lerin çoğunda ağ üzerinden ADB fabrikadan **şifresiz açık** gelir (port 5555). Ağındaki
@@ -116,7 +120,8 @@ built for a 1 GB Hi-Level/Atmaca TV with a Realtek RTD284x chip. It is written i
 dependencies: the APK is 32 KB and it uses about 20 MB of RAM.
 
 It includes an app row with color-adaptive hero, Satellite/HDMI input shortcuts, a status bar (clock, weather,
-AirPlay and ad-block status, speed test, RAM with one-tap cleanup), automatic background-app cleanup,
+AirPlay, LocalSend and ad-block status, speed test, RAM with one-tap cleanup), automatic background-app cleanup
+that keeps AirScreen and LocalSend alive as background services,
 remote-friendly reordering and hiding, and Back → Live TV. The UI is in Turkish.
 `scripts/` contains reversible ADB debloat scripts for Hikeen/Realtek-based TVs.
 
